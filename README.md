@@ -7,7 +7,7 @@ plugin panels for Horizon dashboard to do sever level monitoring, and reporting 
 2. Make sure you have run the Ceilometer IPMI agent on each of your physical nodes, in order to collect the new PTAS meters: <br/>
   ./ceilometer-agent-ipmi &
 
-3. The panels are based on horizon panels, so please make sure you have read this horizon doc, and understand the mechanism:
+3. These demo code are based on horizon panels, so please read below horizon doc, make sure you understand the mechanism:
 http://docs.openstack.org/developer/horizon/topics/tutorial.html
 
 ### Install
