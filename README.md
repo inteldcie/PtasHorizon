@@ -2,9 +2,11 @@
 plugin panels for Horizon dashboard to do sever level monitoring, and reporting leveraging the OpenStack Ceilometer with Intel PTAS meters
 
 ###Dependency
-1. For the Ceilometer IPMI agent was upstreamed at begining of year 2015, so your openstack version must be Kilo or after to use this demo code.
+1. Openstack version. 
+    For the Ceilometer IPMI agent was upstreamed at begining of year 2015, so your openstack version must be Kilo or after to   use this demo code.
 
-2. Make sure you have run the Ceilometer IPMI agent on each of your physical nodes, in order to collect the new PTAS meters: <br/>
+2. Your openstack must have Ceilometer running.
+  Also, please make sure you have run the Ceilometer IPMI agent on each of your physical nodes, in order to collect the new PTAS meters: <br/>
   ./ceilometer-agent-ipmi &
 
 3. These demo code are based on horizon panels, so please read below horizon doc, make sure you understand the mechanism:
