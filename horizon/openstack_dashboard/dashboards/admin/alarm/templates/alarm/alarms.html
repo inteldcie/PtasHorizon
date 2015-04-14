@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load url from future %}
+{% block title %}Global Alarm Settings{% endblock %}
+
+{% block page_header %}
+  {% include "horizon/common/_page_header.html" with title="Global Alarm Settings"%}
+{% endblock page_header %}
+
+{% block main %}
+<div class="row-fluid">
+	<hr/>
+	<div class="span12" style="margin-bottom: 15px">An alarm will be triggered when a metric reaches its configured threshold below.</div>
+	<div id="ceilometer-stats">
+		<div class="control-group">
+		{% if meters %}
+			<div class="controls" style="font-size:15px">
+			{% for alarm in alarms %}
+				<form method="get" action="/admin/alarm/alarmUpdateAction" style="margin: 5px 0px">
+					<table>
+						<tr>
+							<td width="100px" style="font-size: 15px">
+								<b>{{alarm.threshold_rule.meter_name}}:</b>
+							</td>
+							<td style="font-size: 13px">
+								<input name="meter" type="hidden" value="{{alarm.threshold_rule.meter_name}}"/>
+							   {% if alarm.threshold_rule.comparison_operator == 'gt'%}
+							   Upper Warning
+							   {% elif alarm.threshold_rule.comparison_operator == 'lt'  %}
+							   Lower Warning
+							   {% endif %}<input name="operator" type="hidden" value="{{alarm.threshold_rule.comparison_operator}}"/> 
+							   <input name="threshold" value="{{alarm.threshold_rule.threshold}}" size="10"/>
+							   <input type="submit" value="Save"/><br/>
+							</td>
+						</tr>
+					</table>
+				</form>   
+			{% endfor %}  
+			</div>
+		{% endif %}
+		</div>
+	</div>
+</div>
+{% endblock %}

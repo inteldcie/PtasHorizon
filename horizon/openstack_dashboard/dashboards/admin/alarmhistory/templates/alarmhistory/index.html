@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load url from future %}
+{% block title %}Alarm History{% endblock %}
+
+{% block page_header %}
+  {% include "horizon/common/_page_header.html" with title="Alarm History"%}
+{% endblock page_header %}
+
+{% block main %}
+<div class="row-fluid">
+  <div class="span12">
+     
+  </div>
+  <div id="ceilometer-stats">
+
+    <div class="control-group">
+    <table id="report_table" class="table table-bordered table-striped datatable">
+   <thead>
+     <tr class="table_caption">
+        <th class="table_header" colspan="7" width="80%">
+
+
+  <form action="/admin/alarmhistory/" method="get">
+        Server: <select id="host" name="hostname" class="span2">
+                <option value="">all</option>
+          {% if hypervisors %}
+            {% for hypervisor in hypervisors %}
+                <option value="{{ hypervisor.hypervisor_hostname}}" {% if currentHost == hypervisor.hypervisor_hostname %}selected="selected"{% endif %}>{% trans hypervisor.hypervisor_hostname %}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+        
+        Meter:<select id="host" name="meter" class="span2">
+                <option value="">all</option>
+          {% if meters %}
+            {% for m in meters %}
+                <option value="{{ m }}" {% if meter == m %}selected="selected"{% endif %}>{% trans m %}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+        <input type="submit" name="search" value="search"/>
+  </form>
+        </th>
+      </tr>
+      <tr class="tablesorter-headerRow">
+        
+          <th  data-column="0" tabindex="0"><div class="tablesorter-header-inner">
+            Hostname
+            
+          </div></th>
+        
+          <th class="sortable normal_column tablesorter-header" data-column="1" tabindex="0"><div class="tablesorter-header-inner">
+            Meter
+            
+          </div></th>
+        
+          <th class="sortable normal_column tablesorter-header" data-column="2" tabindex="0"><div class="tablesorter-header-inner">
+            comparison
+            
+          </div></th>
+        
+          <th class="sortable normal_column tablesorter-header" data-column="3" tabindex="0"><div class="tablesorter-header-inner">
+            threshold
+          </div></th>
+          
+           <th class="sortable normal_column tablesorter-header" data-column="3" tabindex="0"><div class="tablesorter-header-inner">
+            state
+          </div></th>
+        
+          <th class="sortable normal_column tablesorter-header" data-column="4" tabindex="0"><div class="tablesorter-header-inner">
+            Time
+            
+          </div></th>
+        
+        
+      </tr>
+      
+  
+    </thead>
+  
+    <tbody>
+   {% for history in historys %}
+        {%for alarm in alarmMap%}
+			{%if alarm.alarm_id == history.alarm_id %}
+    <tr class="odd" data-object-id="admin-Glance-image.upload" id="report_table__row__admin-Glance-image.upload">
+    <td class="sortable normal_column">
+            {{alarm.threshold_rule.query.0.value}}
+        </td><td class="sortable normal_column">
+            {{alarm.threshold_rule.meter_name}}
+        </td><td class="sortable normal_column">
+            {{alarm.threshold_rule.comparison_operator}}
+        </td><td class="sortable normal_column">
+            {{alarm.threshold_rule.threshold}}
+        </td>
+        <td class="sortable normal_column">
+            {{history.detail.state}}
+        </td>
+        <td class="sortable normal_column">
+            {{history.timestamp}}
+        </td>
+</tr>
+          {%endif%}
+		{%endfor%}
+ {% endfor %}
+</tbody>
+  
+  
+    
+    <tfoot>
+      
+      <tr>
+        <td colspan="7" data-column="0" class="tablesorter-headerAsc">
+          <span class="table_count">Displaying 100 items</span>
+          
+          
+          
+        </td>
+      </tr>
+    </tfoot>
+    
+  
+  </table>
+    </div>
+</div>
+{% endblock %}

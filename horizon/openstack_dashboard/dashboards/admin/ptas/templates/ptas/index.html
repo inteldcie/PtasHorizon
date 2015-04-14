@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load url from future %}
+{% block title %}PTAS metrics{% endblock %}
+
+{% block page_header %}
+  {% include "horizon/common/_page_header.html" with title="PTAS metrics"%}
+{% endblock page_header %}
+{% block main %}
+
+<style>
+.rickshaw_graph .detail .item.active {
+	opacity: 1;
+	background: rgba(0, 0, 0, 0.8);
+	width: initial;
+}
+</style>
+<div class="row-fluid">
+  <div class="span12">
+    PTAS metrics
+  </div>
+  <div id="ceilometer-stats">
+  <form class="form-horizontal"
+        id="linechart_general_form">
+
+    <div class="control-group">
+      <label for="host" class="control-label">{% trans "host" %}:&nbsp;</label>
+      <div class="controls">
+        <select data-line-chart-command="select_box_change"
+                id="host" name="host" class="span2">
+          {% if hypervisors %}
+            {% for hypervisor in hypervisors %}
+                <option value="{{ hypervisor.hypervisor_hostname}}" {% if forloop.first %}selected="selected"{% endif %}>{% trans hypervisor.hypervisor_hostname %}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+    </div>
+    <div class="control-group">
+      <label for="meter" class="control-label">{% trans "Metric" %}:&nbsp;</label>
+      <div class="controls line_chart_time_picker">
+        <select data-line-chart-command="select_box_change"
+                name="meter" id="meter" class="span2 example" multiple="MULTIPLE">
+           
+           {% if ptasMeters %}
+            <optgroup label='{% trans "PTAS" %}'>
+              {% for meter in ptasMeters %}
+                <option title="{{ meter.description }}"  value="{{ meter.name }}" data-unit="{{ meter.unit }}"{% if meter_default == meter.name%}selected{%endif%}>
+                  {{ meter.label }} :-- {{ meter.unit }}
+                </option>
+              {% endfor %}
+            </optgroup>
+          {% endif %}
+        </select>
+      </div>
+    </div>
+
+
+    <div class="control-group">
+      <label for="stats_attr" class="control-label">{% trans "Value" %}:&nbsp;</label>
+      <div class="controls">
+        <select data-line-chart-command="select_box_change"
+                id="stats_attr" name="stats_attr" class="span2">
+
+          <option selected="selected" value="avg">{% trans "Avg." %}</option>
+          <option value="min">{% trans "Min." %}</option>
+          <option value="max">{% trans "Max." %}</option>
+          <option value="sum">{% trans "Sum." %}</option>
+        </select>
+      </div>
+    </div>
+    <div class="control-group">
+      <label for="date_options" class="control-label">{% trans "Period" %}:&nbsp;</label>
+      <div class="controls">
+        <select data-line-chart-command="select_box_change"
+                id="date_options" name="date_options" class="span2">
+          <option value="1" selected="selected">{% trans "Last day" %}</option>
+          <option value="7">{% trans "Last week" %}</option>
+          <option value="{% now 'j' %}">{% trans "Month to date" %}</option>
+          <option value="15">{% trans "Last 15 days" %}</option>
+          <option value="30">{% trans "Last 30 days" %}</option>
+          <option value="365">{% trans "Last year" %}</option>
+          <option value="other">{% trans "Other" %}</option>
+        </select>
+      </div>
+    </div>
+
+  </form>
+</div>
+  <div class="info row-fluid detail">
+  <div class="span12">
+    <h4>{% trans "Statistics of all resources" %}</h4>
+    <hr class="header_rule" />
+    <div class="info row-fluid detail">
+      <div class="span9 chart_container">
+        <div class="chart"
+             data-chart-type="line_chart"
+             data-url="{% url 'horizon:admin:ptas:samples'%}"
+             data-form-selector='#linechart_general_form'
+             data-legend-selector="#legend"
+             data-smoother-selector="#smoother"
+             data-slider-selector="#slider">
+        </div>
+        <div id="slider"></div>
+        <div class="span3 legend_container">
+          <div id="smoother" title="Smoothing"></div>
+          <div id="legend"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+<script>
+if (typeof horizon.d3_line_chart !== 'undefined') {
+    horizon.d3_line_chart.init("div[data-chart-type='line_chart']",
+      {'auto_resize': true});   
+}
+
+
+  
+function refresh(){
+	if (typeof horizon.d3_line_chart !== 'undefined'){
+		horizon.d3_line_chart.refresh("div[data-chart-type='line_chart']",
+		  	      {'auto_resize': true});
+	}
+	setTimeout(refresh, 60000);
+}
+
+setTimeout(refresh, 60000); 
+</script>
+</div>
+{% endblock %}
