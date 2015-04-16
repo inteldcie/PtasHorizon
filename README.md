@@ -9,7 +9,12 @@ plugin panels for Horizon dashboard to do sever level monitoring, and reporting 
   Also, please make sure you have run the Ceilometer IPMI agent on each of your physical nodes, in order to collect the new PTAS meters: <br/>
   ./ceilometer-agent-ipmi &
 
-3. These demo code are based on horizon panels, so please read below horizon doc, make sure you understand the mechanism:
+3. Make sure the ceilometer has the admin role to use alarm<br/>
+  Create a ceilometer user that the Telemetry Service uses to authenticate with the Identity Service. Use the service tenant and give the user the admin role:
+  <br/>\# keystone user-create --name=ceilometer --pass=CEILOMETER_PASS --email=ceilometer@example.com
+  <br/>\# keystone user-role-add --user=ceilometer --tenant=service --role=admin
+
+4. These demo code are based on horizon panels, so please read below horizon doc, make sure you understand the mechanism:
 http://docs.openstack.org/developer/horizon/topics/tutorial.html
 
 ### Install
