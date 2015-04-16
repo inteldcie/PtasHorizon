@@ -1,5 +1,5 @@
 # PtasHorizon
-plugin panels for Horizon dashboard to do sever level monitoring, and reporting leveraging the OpenStack Ceilometer with Intel PTAS meters
+Reference UI to demonstrate dynamic data collection, reporting and trending of Intel Xeon E5-7 platform level telemetry and metrics in power, thermal and compute data.
 
 ###Dependency
 1. Openstack version. 
