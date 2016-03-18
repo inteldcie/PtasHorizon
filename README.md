@@ -7,7 +7,7 @@ Reference UI to demonstrate dynamic data collection, reporting and trending of I
 
 2. Your openstack must have Ceilometer running.
   Also, please make sure you have run the Ceilometer IPMI agent on each of your physical nodes, in order to collect the new PTAS meters: <br/>
-  ./ceilometer-agent-ipmi &
+  enable_service ceilometer-alarm-evaluator,ceilometer-alarm-notifier,ceilometer-aipmi
 
 3. Make sure the ceilometer has the admin role to use alarm<br/>
   Create a ceilometer user that the Telemetry Service uses to authenticate with the Identity Service. Use the service tenant and give the user the admin role:
