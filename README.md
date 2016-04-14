@@ -17,8 +17,8 @@ Reference UI to demonstrate dynamic data collection, reporting and trending of I
 4. These demo code are based on horizon panels, so please read below horizon doc, make sure you understand the mechanism:
 http://docs.openstack.org/developer/horizon/topics/tutorial.html
 
-5. For there are some API changes in Liberty, the alert functionality not work. 
-   Email me if you strongly want this enabled in Liberty. 
+5. For there are some API changes in Liberty, the alert functionality will not work. 
+   Email me if you strongly want this enabled in Liberty. junjie.huang@intel.com
 
 ### Install
 1. Copy the files under horizon directory into your server's horizon folder, the path is /opt/stack/horizon if you use DevStack.
