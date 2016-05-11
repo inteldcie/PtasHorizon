@@ -11,23 +11,36 @@
 <style>
 .rickshaw_graph .detail .item.active {
 	opacity: 1;
-	background: rgba(0, 0, 0, 0.8);
+	background: rgba(0, 0, 0, 0.6);
 	width: initial;
 }
+#y_axis {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 40px;
+}
+#chart {
+	position: relative;
+	left: 40px;
+}
+.rickshaw_graph .detail .x_label { display: none }
+		.rickshaw_graph .detail .item { line-height: 1.4; padding: 0.5em }
+		.detail_swatch { float: right; display: inline-block; width: 10px; height: 10px; margin: 0 4px 0 0 }
+		.rickshaw_graph .detail .date { color: yellow }
 </style>
 <div class="row-fluid">
   <div class="span12">
-    PTAS metrics
   </div>
-  <div id="ceilometer-stats">
+  <div id="ceilometer-stats" style="overflow:hidden">
   <form class="form-horizontal"
         id="linechart_general_form">
 
-    <div class="control-group">
+    <div class="control-group" style="float:left;margin-left:10px;">
       <label for="host" class="control-label">{% trans "host" %}:&nbsp;</label>
       <div class="controls">
         <select data-line-chart-command="select_box_change"
-                id="host" name="host" class="span2">
+                id="host" name="host" class="span2" onchange="drawChart();">
           {% if hypervisors %}
             {% for hypervisor in hypervisors %}
                 <option value="{{ hypervisor.hypervisor_hostname}}" {% if forloop.first %}selected="selected"{% endif %}>{% trans hypervisor.hypervisor_hostname %}</option>
@@ -36,11 +49,11 @@
         </select>
       </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" style="float:left;margin-left:10px;">
       <label for="meter" class="control-label">{% trans "Metric" %}:&nbsp;</label>
-      <div class="controls line_chart_time_picker">
+      <div class="controls">
         <select data-line-chart-command="select_box_change"
-                name="meter" id="meter" class="span2 example" multiple="MULTIPLE">
+                name="meter" id="meter" class="span2 example" multiple="MULTIPLE" onchange="drawChart();">
            
            {% if ptasMeters %}
             <optgroup label='{% trans "PTAS" %}'>
@@ -54,13 +67,19 @@
         </select>
       </div>
     </div>
+<div class="control-group" style="float:left;margin-left:10px;">
+      <label for="data_type" class="control-label">{% trans "DataType" %}:&nbsp;</label>
+      <div class="controls">
+         <input type="radio" name="dataType" value="{% trans "RealTime" %}" checked onClick="chooseDataType()"/>RealTime
+         <input type="radio" name="dataType" value="{% trans "Statistic" %}" onClick="chooseDataType()"/>Statistic
+      </div>
+    </div>
 
-
-    <div class="control-group">
+    <div class="control-group" id="stats_attr_div" style="float:left;margin-left:10px;display:none">
       <label for="stats_attr" class="control-label">{% trans "Value" %}:&nbsp;</label>
       <div class="controls">
         <select data-line-chart-command="select_box_change"
-                id="stats_attr" name="stats_attr" class="span2">
+                id="stats_attr" name="stats_attr" class="span2" onchange="chooseDataType();">
 
           <option selected="selected" value="avg">{% trans "Avg." %}</option>
           <option value="min">{% trans "Min." %}</option>
@@ -69,11 +88,11 @@
         </select>
       </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" id="date_options_div" style="float:left;margin-left:10px;display:none">
       <label for="date_options" class="control-label">{% trans "Period" %}:&nbsp;</label>
       <div class="controls">
         <select data-line-chart-command="select_box_change"
-                id="date_options" name="date_options" class="span2">
+                id="date_options" name="date_options" class="span2" onchange="chooseDataType();">
           <option value="1" selected="selected">{% trans "Last day" %}</option>
           <option value="7">{% trans "Last week" %}</option>
           <option value="{% now 'j' %}">{% trans "Month to date" %}</option>
@@ -87,20 +106,14 @@
 
   </form>
 </div>
-  <div class="info row-fluid detail">
+  <div class="info row-fluid detail" style="padding-top:20px">
   <div class="span12">
-    <h4>{% trans "Statistics of all resources" %}</h4>
+    <h4>{% trans "Trending Chart" %}</h4>
     <hr class="header_rule" />
     <div class="info row-fluid detail">
       <div class="span9 chart_container">
-        <div class="chart"
-             data-chart-type="line_chart"
-             data-url="{% url 'horizon:admin:ptas:samples'%}"
-             data-form-selector='#linechart_general_form'
-             data-legend-selector="#legend"
-             data-smoother-selector="#smoother"
-             data-slider-selector="#slider">
-        </div>
+		<div id="y_axis"></div>
+		<div id="chart"></div>
         <div id="slider"></div>
         <div class="span3 legend_container">
           <div id="smoother" title="Smoothing"></div>
@@ -112,12 +125,13 @@
   
 </div>
 
+
+</div>
 <script>
-if (typeof horizon.d3_line_chart !== 'undefined') {
+/*if (typeof horizon.d3_line_chart !== 'undefined') {
     horizon.d3_line_chart.init("div[data-chart-type='line_chart']",
       {'auto_resize': true});   
 }
-
 
   
 function refresh(){
@@ -125,10 +139,299 @@ function refresh(){
 		horizon.d3_line_chart.refresh("div[data-chart-type='line_chart']",
 		  	      {'auto_resize': true});
 	}
-	setTimeout(refresh, 60000);
+	setTimeout(refresh, 180000);
 }
 
-setTimeout(refresh, 60000); 
+setTimeout(refresh, 180000); */
+
+colorwheel = [
+                '#b5b6a9',
+                '#858772',
+                '#785f43',
+                '#96557e',
+                '#4682b4',
+                '#65b9ac',
+                '#73c03a',
+                '#cb513a'
+        ]
+var dataType = 0;
+var dataUrl = '{% url 'horizon:admin:ptas:data'%}'
+$(document).ready(
+  drawChart()
+);
+
+var min = 0, max = 50;
+var iv;
+var POINT_MAX = 200;  //the total points number to draw
+var DATA_INTERVAL = 5000; //5s to load new data for real time chart
+function drawChart(){
+    if(typeof(Rickshaw) == 'undefined'){
+	   setTimeout(drawChart, 1000);
+	   return;
+	}    
+	data = [];
+	if(typeof(graph) != 'undefined'){
+	     graph = null;
+	     $("#chart").html("");
+		 $("#legend").html("");
+	     $("#y_axis").html("");			
+	}			     
+	graph = new Rickshaw.Graph({
+								  element: document.getElementById("chart"),
+								  renderer: 'line',
+								  width: 1200,
+								  height: 500,
+								  series: []
+								});
+	start_loading();
+	$.get(dataUrl,
+	      {"host": $("#host").val(), 
+		   "limit": POINT_MAX,
+		   "meter":	$("#meter").val(),
+           "date_options": $("#date_options").val(),
+		   "stats_attr" : $("#stats_attr").val()
+		   },
+		   function(result)
+		   {		       	
+			   var i = 0;
+			   for(var index in result){
+			      meter_name = result[index]['name'];
+				  unit = result[index]['unit']
+				  meter_point= [];
+				  for(var point in result[index]['data']){
+				      time = result[index]['data'][point]['x'];
+					  time = Date.parse(time) / 1000;
+					  volume = result[index]['data'][point]['y'];
+					  if(volume > max){
+					     max = volume;
+					  }
+					  if(volume < min){
+					     min = volume;
+					  }
+					  //fix the airflow unit bug
+					  if(meter_name.indexOf("airflow") >=0){
+					     volume = volume / 10;
+					  }
+				      meter_point.push({x: time, y: volume});				  
+				  }
+				  meter_point = meter_point.reverse();
+				  data.push(meter_point);
+				  graph.series.push(
+				    {
+					  color: colorwheel[colorwheel.length - i % colorwheel.length - 1],
+					  data: meter_point,
+					  name: meter_name,
+					  unit: unit,
+					  scale: d3.scale.linear().domain([min, max]).nice()
+					}
+				  );
+				  i++;
+			   }
+			   $("y_axis").html("");	
+               yScaled = new Rickshaw.Graph.Axis.Y.Scaled( {
+					  graph: graph,
+					  orientation: 'left',
+					  tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+					  element: document.getElementById('y_axis'),
+					  scale: d3.scale.linear().domain([min, max]).nice()
+					} );
+
+
+			   	new Rickshaw.Graph.Axis.Time({
+				  graph: graph
+				});
+
+				hoverDetail = new Rickshaw.Graph.HoverDetail( {
+					graph: graph,
+					formatter: function(series, x, y) {
+						var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
+						var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span></br>';
+						var content = swatch + series.name + ": " + parseInt(y) + series.unit + '<br>' + date;
+						return content;
+					}
+				} );
+
+				hoverDetail._calcLayoutError = function(alignables) {
+						// Layout error is calculated as the number of linear pixels by which
+						// an alignable extends past the left or right edge of the parent.	
+						if(hoverDetail.element.parentNode == null){
+						   return 0;
+						}
+						var parentRect = hoverDetail.element.parentNode.getBoundingClientRect();
+
+						var error = 0;
+						var alignRight = alignables.forEach(function(el) {
+								var rect = el.getBoundingClientRect();
+								if (!rect.width) {
+										return;
+								}
+
+								if (rect.right > parentRect.right) {
+										error += rect.right - parentRect.right;
+								}
+
+								if (rect.left < parentRect.left) {
+										error += parentRect.left - rect.left;
+								}
+						});
+						return error;
+				}               
+				$("#legend").html("");					
+				var legend = new Rickshaw.Graph.Legend( {
+					graph: graph,
+					element: document.getElementById('legend')
+
+				} );
+				
+				graph.render();
+				finish_loading();
+				var s = 0;
+				if(iv != "undefined"){
+				  clearInterval(iv);
+				}
+				iv = setInterval( function() {
+				        if(dataType !=0 ){
+						   return;
+						}
+                        $.get(dataUrl,
+							  {
+							   "host": $("#host").val(), 
+							   "limit": 1,
+							   "meter":	$("#meter").val()
+							   },
+							   function(result)
+							   {	
+							       for(var index in result){
+									  meter_name = result[index]['name'];
+									  unit = result[index]['unit']
+									  serie = findByNameInArray(graph.series, meter_name);
+									  if(serie == null){
+									     graph.series.push(
+										   {
+											  color: colorwheel[colorwheel.length - graph.series.length % colorwheel.length - 1],
+											  data: [],
+											  name: meter_name,
+											  unit: unit,
+											  scale: d3.scale.linear().domain([min, max]).nice()
+											}
+										 );
+										 serie = findByNameInArray(graph.series, meter_name);
+									  }
+									  for(var point in result[index]['data']){
+										  time = result[index]['data'][point]['x'];
+										  time = Date.parse(time) / 1000;
+										  if(timeExist(serie['data'], time)){
+										     continue;
+										  }										  
+										  volume = result[index]['data'][point]['y'];
+										 
+										  if(volume > max){
+											 max = volume;
+										  }
+										  if(volume < min){
+											 min = volume;
+										  }
+										  if(meter_name.indexOf("airflow") >=0){ //fix the airflow unit bug
+											 volume = volume / 10;
+										  }
+										  serie['data'].push({x: time, y: volume});
+										  if(serie['data'].length > POINT_MAX){
+											  serie['data'].shift();
+										  }
+										  serie['scale'] = d3.scale.linear().domain([min, max]).nice();
+										  yScaled.scale = d3.scale.linear().domain([min, max]).nice();
+										  graph.render();
+									  }									  									  
+									  
+								   }
+								  
+								   s++;
+							   }).fail(function(){
+							       horizon.alert("error", "Ajax call error, please check!");
+							   });
+
+					}, DATA_INTERVAL );
+
+		   }
+		 );
+}
+
+function findByNameInArray(array, name){
+   for(var i in array){
+     item = array[i];
+	 if(item['name'] == name){
+	    return item;
+	 }
+   }
+   return null;
+}
+
+function timeExist(array, time){
+  for(var i in array){
+     item = array[i];
+     if(item['x'] == time){
+	    return true;
+	 } 
+  }
+  return false;
+}
+
+function getCurrentDataType(){
+  var group1 = $("[name='dataType']").filter(":checked"); 
+  var typeStr = group1[0].value;
+  if(typeStr == 'RealTime'){
+     return 0;
+  }
+  else{
+     return 1;
+  }
+}
+
+function chooseDataType(){
+   dataType = getCurrentDataType();
+   if(dataType == 0){
+      $("#date_options_div").hide();
+	  $("#stats_attr_div").hide();
+	  dataUrl = '{% url 'horizon:admin:ptas:data'%}'
+	  drawChart();	  
+   }
+   else{
+	  $("#date_options_div").show();
+	  $("#stats_attr_div").show();
+      dataUrl = '{% url 'horizon:admin:ptas:samples'%}'
+	  drawChart();
+   }
+}
+
+
+function start_loading(){
+      height = graph.height;
+	  width  = graph.width;
+      $("#chart").find('.spinner_wrapper').remove();
+      $(".controls").find("select").attr("disabled", true)
+	  // Show the spinner.
+      spinner = $('<div class="spinner_wrapper"></div>');
+      $("#chart").append(spinner);
+
+      /*
+        TODO(lsmola) a loader for in-line tables spark-lines has to be
+        prepared, the parameters of loader could be sent in settings.
+      */
+      spinner.spin(horizon.conf.spinner_options.line_chart);
+
+      // Center the spinner considering the size of the spinner.
+      var radius = horizon.conf.spinner_options.line_chart.radius;
+      var length = horizon.conf.spinner_options.line_chart.length;
+      var spinner_size = radius + length;
+      var top = (height / 2) - spinner_size / 2;
+      var left = (width / 2) - spinner_size / 2;
+      spinner.css('top', top).css('left', left);
+
+}
+
+function finish_loading(){
+    $("#chart").find('.spinner_wrapper').remove();
+	$(".controls").find("select").attr("disabled", false)
+}
 </script>
-</div>
 {% endblock %}

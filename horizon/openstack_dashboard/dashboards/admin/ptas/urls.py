@@ -24,4 +24,5 @@ from openstack_dashboard.dashboards.admin.ptas import views
 urlpatterns = patterns('openstack_dashboard.dashboards.admin.ptas.views',
     url(r'^$', views.IndexView.as_view(), name='index'),
     url(r'^samples$', views.SamplesView.as_view(), name='samples'),
+    url(r'^data$', views.DataView.as_view(), name='data'),
 )
